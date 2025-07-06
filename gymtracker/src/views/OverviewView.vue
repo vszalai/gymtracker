@@ -122,12 +122,32 @@
           class="w-full bg-zinc-700 hover:bg-grayhover text-white font-bold py-2 px-4 rounded transition duration-150 ease-in"
         >
           Set Reminder
-        </button>
-        <div v-if="reminderNotification" class="text-center text-white mt-2">
-          {{ reminderNotification }}
+        </button>      <div v-if="reminderNotification" class="text-center text-white mt-2">
+        {{ reminderNotification }}
+      </div>
+    </form>
+
+    <div class="mt-6 space-y-4">
+      <h2 class="font-black text-2xl mb-4 border-b border-white pb-2">Live Activity</h2>
+      <div class="max-h-40 overflow-y-auto space-y-2">
+        <div
+          v-for="activity in liveActivities"
+          :key="activity.id"
+          class="bg-zinc-700 p-3 rounded-md text-sm"
+        >
+          <div class="flex justify-between items-center">
+            <span class="font-semibold">{{ activity.exercise }}</span>
+          </div>
+          <div class="text-gray-300">
+            {{ activity.sets }} sets × {{ activity.reps }} reps @ {{ activity.weight }}kg
+          </div>
         </div>
-      </form>
+        <div v-if="liveActivities.length === 0" class="text-center text-gray-400 py-4">
+          No recent activity
+        </div>
+      </div>
     </div>
+  </div>
     <div>
       <section class="max-w-5xl mx-auto bg-gray p-6 rounded-lg shadow-lg">
         <h2 class="font-black text-2xl mb-6 border-b border-gray-600 pb-2">Exercise History</h2>
@@ -312,6 +332,7 @@ export default {
       reminderMessage: '',
       reminderDelay: '',
       reminderNotification: '',
+      liveActivities: [],
     }
   },
   methods: {
@@ -425,12 +446,29 @@ export default {
       this.reminderMessage = ''
       this.reminderDelay = ''
     },
+    addLiveActivity(activity) {
+      const newActivity = {
+        ...activity,
+        id: Date.now() + Math.random()
+      }
+      this.liveActivities.unshift(newActivity)
+      if (this.liveActivities.length > 10) {
+        this.liveActivities = this.liveActivities.slice(0, 10)
+      }
+    },
   },
   mounted() {
     this.getExercises()
     this.date = new Date()
+
+    socket.emit('joinWorkoutRoom')
+
     socket.on('reminder', ({ message }) => {
       this.reminderNotification = `Reminder: ${message}`
+    })
+
+    socket.on('newExercise', (exerciseData) => {
+      this.addLiveActivity(exerciseData)
     })
   },
 }

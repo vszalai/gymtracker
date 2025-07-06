@@ -50,6 +50,10 @@ io.on("connection", (socket) => {
       socket.emit("reminder", { message });
     }, delayMs);
   });
+
+  socket.on("joinWorkoutRoom", () => {
+    socket.join("workout-updates");
+  });
 });
 
 app.use("/", indexRouter);
@@ -82,6 +86,15 @@ app.post("/api/addexercise", async (req, res) => {
   const collection = await db.collection("exercises");
   let newData = req.body;
   let result = await collection.insertOne(newData);
+
+  const exerciseData = req.body[date];
+  io.to("workout-updates").emit("newExercise", {
+    exercise: exerciseData.exercise,
+    sets: exerciseData.sets,
+    weight: exerciseData.weight,
+    reps: exerciseData.reps,
+  });
+
   res.status(204).send(result);
 });
 
