@@ -351,7 +351,7 @@ export default {
           userid: 'test',
         },
       })
-      console.log(res.data)
+
       this.exerciseList = res.data
     },
     async submitExercise(event) {

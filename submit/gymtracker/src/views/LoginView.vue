@@ -33,12 +33,6 @@
         >
           Login
         </button>
-        <RouterLink
-        to="/register">
-          <div class="text-white text-xs text-center underline">
-          Not a user yet? Click here to register.
-        </div>
-        </RouterLink>
         <div v-if="error" class="text-red-400 text-center mt-2">{{ error }}</div>
       </form>
     </div>

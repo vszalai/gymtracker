@@ -6,7 +6,6 @@ var cors = require("cors");
 var dotenv = require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { Server } = require("socket.io");
-const bcrypt = require("bcrypt");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -40,6 +39,7 @@ const io = new Server(3002, {
 io.on("connection", (socket) => {
   console.log(`A user connected with ID: ${socket.id}`);
 
+
   socket.on("joinWorkoutRoom", () => {
     socket.join("workout-updates");
   });
@@ -62,7 +62,6 @@ app.post("/api/addexercise", async (req, res) => {
   const keys = Object.keys(req.body);
   const date = keys.find((keys) => keys !== "userid");
 
-  console.log(req.body);
   if (
     !req.body[date].exercise ||
     !req.body[date].sets ||
@@ -112,7 +111,6 @@ app.put("/api/editexercise", async (req, res) => {
     },
   };
   const collection = await db.collection("exercises");
-  console.log(newData);
   const result = await collection.updateOne({ _id: new ObjectId(id) }, newData);
   res.send(result).status(200);
 });
@@ -169,60 +167,6 @@ app.get("/api/stats", async (req, res) => {
     mostCommonExercise,
     totalWeightLifted: totalWeight,
   });
-});
-
-app.post("/api/register", async (req, res) => {
-  const collection = await db.collection("users");
-
-  const emailInUse = await collection.findOne({
-    email: req.body.email,
-  });
-  if (emailInUse) {
-    res.status(409).json({ error: "Email already in use." });
-    console.log(emailInUse);
-    return;
-  }
-  const usernameTaken = await collection.findOne({
-    username: req.body.username,
-  });
-  if (usernameTaken) {
-    res.status(409).json({
-      error: "Username already in use. Please choose a different one.",
-    });
-    return;
-  }
-  const usernameRegex = /^[a-zA-Z0-9]{1,15}$/;
-  if (!usernameRegex.test(req.body.username)) {
-    res.status(400).json({
-      error:
-        "Username may not contain special symbols and should not be longer than 15 characters.",
-    });
-    return;
-  }
-  const pwRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{10,32}$/;
-  if (req.body.password.length < 10 || req.body.password.length > 32) {
-    res
-      .status(400)
-      .json({ error: "Password must be between 10 and 32 characters" });
-    return;
-  }
-  if (!pwRegex.test(req.body.password)) {
-    res.status(400).json({
-      error: "Password must contain at least a digit and a special character.",
-    });
-    return;
-  }
-
-  const saltrounds = 10;
-  bcrypt.hash(req.body.password, saltrounds, function (err, hash) {
-    collection.insertOne({
-      username: req.body.username,
-      email: req.body.email,
-      password: hash,
-    });
-  });
-  res.status(200).send();
-  console.log(req.body);
 });
 
 module.exports = app;
