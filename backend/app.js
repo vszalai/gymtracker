@@ -118,11 +118,14 @@ app.put("/api/editexercise", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-  if (req.body.username === "test" && req.body.password === "test") {
-    res.status(200).json({ success: true });
-  } else {
-    res.status(401).send({ error: "Invalid username or password" });
+  const collection = await db.collection("users");
+  const user = await collection.findOne({ username: req.body.username });
+  if (!user) {
+    res.status(401).send({ error: "Incorrect username or password." });
+    return;
   }
+  let passwordValid = await bcrypt.compare(req.body.password, user.password);
+  res.status(200).send();
 });
 
 app.delete("/api/deleteallexercises", async (req, res) => {
